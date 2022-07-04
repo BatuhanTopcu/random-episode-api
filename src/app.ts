@@ -3,7 +3,8 @@ import dotenv from "dotenv";
 import axios_t from "./axios_token";
 import morgan from "morgan";
 import SearchRoute from "./routes/search";
-import RandomEpisodeRoute from "./routes/randomEpisode";
+import SingleEpisodeRoute from "./routes/singleEpisode";
+import MultipleEpisodeRoute from "./routes/multipleEpisode";
 
 dotenv.config();
 
@@ -13,7 +14,8 @@ const port = process.env.PORT;
 app.use(morgan("tiny"));
 
 app.use("/search", SearchRoute);
-app.use("/randomEpisode", RandomEpisodeRoute);
+app.use("/singleEpisode", SingleEpisodeRoute);
+app.use("/multipleEpisode", MultipleEpisodeRoute);
 
 app.get("/", async (req: Request, res: Response) => {
   res.send("Hi");

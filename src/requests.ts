@@ -1,7 +1,10 @@
 import axios_t from "./axios_token";
-import { Episode, Season, ShowDetail } from "./types";
+import { Episode, EpisodeDetail, Season, ShowDetail } from "./types";
+import redis from "./redis";
 
-export const getShowDetails = async (show_id: string): Promise<ShowDetail> => {
+export const getShowDetailsFromTmdb = async (
+  show_id: string
+): Promise<ShowDetail> => {
   const data = (await axios_t.get(`/tv/${show_id}`)).data;
   return {
     id: data.id,
@@ -20,6 +23,19 @@ export const getShowDetails = async (show_id: string): Promise<ShowDetail> => {
       (season: Season) => season.season_number > 0
     ).length,
   };
+};
+
+export const getShowDetails = async (show_id: string): Promise<ShowDetail> => {
+  const value = await redis.get(`/show?id=${show_id}`);
+  if (value) {
+    return JSON.parse(value);
+  } else {
+    const data = await getShowDetailsFromTmdb(show_id);
+    if (data) {
+      await redis.set(`/show?id=${show_id}`, JSON.stringify(data));
+    }
+    return data;
+  }
 };
 
 export const getEpisodeDetails = async ({
@@ -44,5 +60,38 @@ export const getEpisodeDetails = async ({
     season_number: data.season_number,
     vote_average: data.vote_average,
     overview: data.overview,
+  };
+};
+
+export const getRandomEpisode = async (
+  shows: ShowDetail[]
+): Promise<EpisodeDetail> => {
+  const random_show = shows[Math.floor(Math.random() * shows.length)];
+  let random_episode_index = Math.floor(
+    Math.random() * random_show.number_of_episodes
+  );
+  let random_season_index = 1;
+
+  if (random_episode_index < random_show.seasons[0].episode_count) {
+    random_season_index = 1;
+  } else {
+    random_show.seasons.forEach((season, index) => {
+      if (random_episode_index > season.episode_count) {
+        random_episode_index -= season.episode_count;
+        random_season_index = index + 1;
+      }
+    });
+  }
+  const episode = await getEpisodeDetails({
+    show_id: random_show.id,
+    season_number: random_season_index,
+    episode_number: random_episode_index,
+  });
+
+  return {
+    ...episode,
+    show_name: random_show.name,
+    show_backdrop_path: random_show.backdrop_path,
+    show_poster_path: random_show.poster_path,
   };
 };
