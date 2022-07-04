@@ -4,20 +4,23 @@ import axios_t from "../axios_token";
 
 const router = Router();
 
-router.get("/:text", async (req, res) => {
-  await redis.connect();
-  const value = await redis.get(`/search/tv?query=${req.params.text}`);
-  if (value) {
-    res.send(JSON.parse(value));
-  } else {
-    const data = await axios_t.get(`/search/tv?query=${req.params.text}`);
-    await redis.set(
-      `/search/tv?query=${req.params.text}`,
-      JSON.stringify(data.data)
-    );
-    res.send(data.data);
+router.get("/", async (req, res) => {
+  const text = req.query.text;
+  if (!text) {
+    res.status(500).send("No text provided");
   }
-  await redis.disconnect();
+  try {
+    const value = await redis.get(`/search?text=${text}`);
+    if (value) {
+      res.send(JSON.parse(value));
+    } else {
+      const data = (await axios_t.get(`/search/tv?query=${text}`)).data;
+      await redis.set(`/search?text=${text}`, JSON.stringify(data));
+      res.send(data);
+    }
+  } catch (err) {
+    res.status(500).send(err);
+  }
 });
 
 export default router;

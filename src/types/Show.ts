@@ -9,7 +9,6 @@ export type Show = {
   vote_average: number;
   release_date: string;
   popularity: number;
-  genre_ids: number[];
 };
 
 export type ShowDetail = Show & {

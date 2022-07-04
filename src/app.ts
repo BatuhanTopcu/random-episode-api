@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import axios_t from "./axios_token";
 import morgan from "morgan";
 import SearchRoute from "./routes/search";
+import RandomEpisodeRoute from "./routes/randomEpisode";
 
 dotenv.config();
 
@@ -12,14 +13,10 @@ const port = process.env.PORT;
 app.use(morgan("tiny"));
 
 app.use("/search", SearchRoute);
+app.use("/randomEpisode", RandomEpisodeRoute);
 
 app.get("/", async (req: Request, res: Response) => {
-  try {
-    const data = await axios_t.get("/discover/movie");
-    res.send(data.data);
-  } catch (err) {
-    res.send(err);
-  }
+  res.send("Hi");
 });
 
 app.listen(port, () => {
