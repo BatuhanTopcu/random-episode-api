@@ -1,7 +1,9 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-import axios_t from "./axios_token";
 import morgan from "morgan";
+import cors from "cors";
+import corsOptions from "./corsOptions";
+//Routes
 import SearchRoute from "./routes/search";
 import SingleEpisodeRoute from "./routes/singleEpisode";
 import MultipleEpisodeRoute from "./routes/multipleEpisode";
@@ -11,6 +13,7 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT;
 
+app.use(cors(corsOptions));
 app.use(morgan("tiny"));
 
 app.use("/search", SearchRoute);

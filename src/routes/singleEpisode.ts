@@ -1,7 +1,7 @@
 import Router from "express";
-import redis from "../redis";
 import { getShowDetails, getRandomEpisode } from "../requests";
 import { ShowDetail } from "../types";
+
 const router = Router();
 
 router.get("/", async (req, res) => {
