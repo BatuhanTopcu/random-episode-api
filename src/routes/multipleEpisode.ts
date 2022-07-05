@@ -32,7 +32,6 @@ router.get("/", async (req, res) => {
     .filter((promise) => promise.status === "fulfilled")
     // @ts-ignore
     .map((promise) => promise.value) as EpisodeDetail[];
-
   res.send(episodes);
 });
 

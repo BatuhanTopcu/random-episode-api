@@ -1,11 +1,18 @@
 import axios_t from "./axios_token";
 import { Episode, EpisodeDetail, Season, ShowDetail } from "./types";
-import redis from "./redis";
+import redis, { ready } from "./redis";
+
+export const randomIntFromInterval = (min: number, max: number): number => {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
 
 export const getShowDetailsFromTmdb = async (
   show_id: string
 ): Promise<ShowDetail> => {
   const data = (await axios_t.get(`/tv/${show_id}`)).data;
+  const seasons_filtered = data.seasons.filter(
+    (season: Season) => season.season_number > 0
+  );
   return {
     id: data.id,
     name: data.name,
@@ -15,24 +22,24 @@ export const getShowDetailsFromTmdb = async (
     vote_average: data.vote_average,
     release_date: data.release_date,
     popularity: data.popularity,
-    seasons: data.seasons.filter((season: Season) => season.season_number > 0),
-    number_of_episodes: data.seasons
-      .filter((season: Season) => season.season_number > 0)
-      .reduce((acc: number, cur: Season) => acc + cur.episode_count, 0),
-    number_of_seasons: data.seasons.filter(
-      (season: Season) => season.season_number > 0
-    ).length,
+    seasons: seasons_filtered,
+    number_of_episodes: seasons_filtered.reduce(
+      (acc: number, cur: Season) => acc + cur.episode_count,
+      0
+    ),
+    number_of_seasons: seasons_filtered.length,
   };
 };
 
 export const getShowDetails = async (show_id: string): Promise<ShowDetail> => {
-  const value = await redis.get(`/show?id=${show_id}`);
+  if (!ready) return await getShowDetailsFromTmdb(show_id);
+  const value = await redis.get(`show?id=${show_id}`);
   if (value) {
     return JSON.parse(value);
   } else {
     const data = await getShowDetailsFromTmdb(show_id);
     if (data) {
-      await redis.set(`/show?id=${show_id}`, JSON.stringify(data));
+      await redis.set(`show?id=${show_id}`, JSON.stringify(data));
     }
     return data;
   }
@@ -67,25 +74,24 @@ export const getRandomEpisode = async (
   shows: ShowDetail[]
 ): Promise<EpisodeDetail> => {
   const random_show = shows[Math.floor(Math.random() * shows.length)];
-  let random_episode_index = Math.floor(
-    Math.random() * random_show.number_of_episodes
+  let random_episode_number = randomIntFromInterval(
+    1,
+    random_show.number_of_episodes
   );
-  let random_season_index = 1;
-
-  if (random_episode_index < random_show.seasons[0].episode_count) {
-    random_season_index = 1;
-  } else {
-    random_show.seasons.forEach((season, index) => {
-      if (random_episode_index > season.episode_count) {
-        random_episode_index -= season.episode_count;
-        random_season_index = index + 1;
-      }
-    });
+  let random_season_index = 0;
+  while (
+    random_episode_number >
+    random_show.seasons[random_season_index].episode_count
+  ) {
+    random_episode_number -=
+      random_show.seasons[random_season_index].episode_count;
+    random_season_index++;
   }
+
   const episode = await getEpisodeDetails({
     show_id: random_show.id,
-    season_number: random_season_index,
-    episode_number: random_episode_index,
+    season_number: random_season_index === 0 ? 1 : random_season_index,
+    episode_number: random_episode_number,
   });
 
   return {

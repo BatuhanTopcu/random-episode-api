@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import cors from "cors";
@@ -19,10 +19,6 @@ app.use(morgan("tiny"));
 app.use("/search", SearchRoute);
 app.use("/singleEpisode", SingleEpisodeRoute);
 app.use("/multipleEpisode", MultipleEpisodeRoute);
-
-app.get("/", async (req: Request, res: Response) => {
-  res.send("Hi");
-});
 
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);

@@ -7,11 +7,11 @@ export type Show = {
   backdrop_path: string;
   overview: string;
   vote_average: number;
-  release_date: string;
   popularity: number;
 };
 
 export type ShowDetail = Show & {
+  release_date: string;
   seasons: Season[];
   number_of_episodes: number;
   number_of_seasons: number;
