@@ -1,6 +1,6 @@
 const corsOptions = {
-  origin: "http://localhost:3000",
-  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  origin: "https://random-episode.netlify.app",
+  optionsSuccessStatus: 200,
 };
 
 export default corsOptions;
